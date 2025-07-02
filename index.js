@@ -1,14 +1,12 @@
-const express = require('express');
-const app = express();
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 
-const { type } = require('./config.js');
 const { connectDb, executeProcedure } = require('./sql');
 const { andromedaAuthorization } = require('./authorization.js');
-const { sendErrorReport } = require('./functions/errorReporting.js');
+const { sendErrorEmail } = require('./functions/errorReporting.js');
 
 const { getCurrentPODetailIds, deletePODetails } = require('./andromeda');
 
-const server = app.listen(6026, async () => {
+const main = async () => {
   console.log('Andromeda PO Detail Deletes is running...');
   const errors = [];
   try {
@@ -30,17 +28,33 @@ const server = app.listen(6026, async () => {
     errors.push({
       err: err?.message,
     });
+    await sendErrorEmail(errors.flat());
+    process.kill(process.pid, 'SIGTERM');
   }
 
   if (errors.flat().length) {
-    await sendErrorReport(errors.flat(), type);
+    await sendErrorEmail(errors.flat());
   }
 
   process.kill(process.pid, 'SIGTERM');
-});
+};
+
+main()
 
 process.on('SIGTERM', () => {
   server.close(() => {
     console.log('Process terminated');
   });
+});
+
+// Register an unhandled exception handler
+process.on('uncaughtException', async (err) => {
+  // Exit the application with an error code
+  process.exit(1);
+});
+
+// Register an unhandled exception handler
+process.on('unhandledRejection', async (err) => {
+  // Exit the application with an error code
+  process.exit(1);
 });

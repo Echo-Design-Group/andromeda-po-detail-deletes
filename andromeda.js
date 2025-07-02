@@ -128,6 +128,8 @@ const deletePODetails = async (ids) => {
     ({ idPODetail }) => !ids.includes(parseInt(idPODetail))
   );
 
+  console.log(deletedPODetails)
+
   // If there are deleted details...
   if (deletedPODetails.length) {
     // Insert po details into a table and then delete from archive
