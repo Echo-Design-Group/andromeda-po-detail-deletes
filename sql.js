@@ -1,5 +1,6 @@
-const sql = require('mssql');
-const { server, database, sqlUser, sqlPass } = require('./config.js');
+const sql = require("mssql");
+const { database, server } = require("./config.js");
+const { sqlUser, sqlPass } = require("../globalConfig.js");
 
 const pool = new sql.ConnectionPool({
   user: sqlUser,
@@ -8,11 +9,12 @@ const pool = new sql.ConnectionPool({
   database,
   trustServerCertificate: true,
   requestTimeout: 500000,
+  encrypt: false,
 });
 
 const connectDb = async () => {
   await pool.connect();
-  return 'Complete';
+  return "Complete";
 };
 
 const getLastRunTime = async (program) => {
@@ -27,7 +29,7 @@ const getLastRunTime = async (program) => {
 };
 
 const getSQLServerData = async (table, where) => {
-  const query = `SELECT * FROM ${table} ${where ? where : ''}`;
+  const query = `SELECT * FROM ${table} ${where ? where : ""}`;
   try {
     const res = await pool.query(query);
     return res?.recordset;
@@ -49,7 +51,7 @@ const getValues = (obj, timestamp) => {
   const values = Object.values(obj);
   const sqlString = values.reduce((acc, value, index) => {
     // typeof value === 'string' && value.replaceAll("'", "''");
-    if (typeof value === 'object') {
+    if (typeof value === "object") {
       acc += `'${value.toISOString()}',`;
     } else if (index === values.length - 1 && timestamp) {
       acc += `'${value}', CURRENT_TIMESTAMP)`;
@@ -70,7 +72,7 @@ const insertStatement = (table, values) => {
 const executeProcedure = async (proc) => {
   try {
     await pool.request().execute(proc);
-    return 'Complete';
+    return "Complete";
   } catch (err) {
     return `Error: ${err?.message}`;
   }

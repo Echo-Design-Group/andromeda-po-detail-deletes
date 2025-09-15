@@ -1,1 +1,1 @@
-node C:\Users\echo\Documents\Development\andromeda-po-detail-deletes\index.js
+node C:\Users\dotnetapp\Desktop\Projects\Andromeda\andromeda-po-detail-deletes\index.js
