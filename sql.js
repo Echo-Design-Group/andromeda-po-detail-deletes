@@ -20,7 +20,7 @@ const connectDb = async () => {
 const getLastRunTime = async (program) => {
   try {
     const res = await pool.query(
-      `SELECT TOP 1 * FROM AndromedaSchedule WHERE Program = '${program}' ORDER BY LastRunTime DESC`
+      `SELECT TOP 1 * FROM AndromedaSchedule WHERE Program = '${program}' ORDER BY LastRunTime DESC`,
     );
     return res?.recordset;
   } catch (err) {

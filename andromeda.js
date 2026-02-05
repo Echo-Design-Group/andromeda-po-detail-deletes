@@ -1,11 +1,11 @@
-const axios = require('axios');
-const { url, idQuery } = require('./config.js');
+const axios = require("axios");
+const { url, idQuery } = require("./config.js");
 const {
   getSQLServerData,
   submitAllQueries,
   submitQuery,
   getSQLServerDataByQuery,
-} = require('./sql');
+} = require("./sql");
 
 //Returns an array of all current po detail ids
 const getCurrentPODetailIds = async () => {
@@ -20,8 +20,8 @@ const insertAndDeleteDetails = async (arr) => {
   //Insert all records into the delete table
   const submitErrors = await submitAllQueries(
     arr,
-    'ProductionOrderDetailDeletes',
-    true
+    "ProductionOrderDetailDeletes",
+    true,
   );
 
   submitErrors.length && errors.push(submitErrors);
@@ -39,9 +39,9 @@ const insertAndDeleteDetails = async (arr) => {
   console.log(idStr);
   try {
     await submitQuery(
-      `DELETE FROM ProductionOrderDetailImportArchive WHERE idPODetail IN ${idStr}`
+      `DELETE FROM ProductionOrderDetailImportArchive WHERE idPODetail IN ${idStr}`,
     );
-    console.log('Deleted');
+    console.log("Deleted");
   } catch (err) {
     errors.push({
       err: err?.message,
@@ -65,8 +65,8 @@ const getProductionOrderImportsToUpdate = async (arr) => {
   }, `(`);
 
   const importsToUpdate = await getSQLServerData(
-    '[Andromeda-UpTo].[dbo].[ProductionOrdersImport]',
-    `WHERE idPODetail in ${deletedIdClause}`
+    "[Andromeda-UpTo].[dbo].[ProductionOrdersImport]",
+    `WHERE idPODetail in ${deletedIdClause}`,
   );
 
   return importsToUpdate;
@@ -74,8 +74,8 @@ const getProductionOrderImportsToUpdate = async (arr) => {
 
 const getNewIdPODetail = async (where) => {
   const row = await getSQLServerData(
-    'ProductionOrderDetailImportArchive',
-    where
+    "ProductionOrderDetailImportArchive",
+    where,
   );
   return row[0]?.idPODetail || 0;
 };
@@ -90,7 +90,7 @@ const updateImports = async (arr) => {
 			idPO = '${idPO}'
 			and Style = '${Style}'
 			and Color = '${Color}'
-			and MostRecent = 'Yes'`
+			and MostRecent = 'Yes'`,
     );
     try {
       await submitQuery(`UPDATE [Andromeda-UpTo].[dbo].[ProductionOrdersImport]
@@ -119,28 +119,28 @@ const updateImports = async (arr) => {
 */
 const deletePODetails = async (ids) => {
   //Get all current id po details from our DB
-  const sqlPODetails = await getSQLServerData(
-    'ProductionOrderDetailImportArchive'
+  const sqlPODetails = await getSQLServerDataByQuery(
+    "SELECT DISTINCT idPODetail FROM ProductionOrderDetailImportArchive",
   );
+  console.log("Got POs from SQL");
 
   //Find id po details that are in our DB, but are deleted from Andromeda
   const deletedPODetails = sqlPODetails.filter(
-    ({ idPODetail }) => !ids.includes(parseInt(idPODetail))
+    ({ idPODetail }) => !ids.includes(parseInt(idPODetail)),
   );
+  console.log(deletedPODetails);
 
   // If there are deleted details...
   if (deletedPODetails.length) {
     // Insert po details into a table and then delete from archive
-    const insertAndDeleteErrors = await insertAndDeleteDetails(
-      deletedPODetails
-    );
+    const insertAndDeleteErrors =
+      await insertAndDeleteDetails(deletedPODetails);
 
     console.log(insertAndDeleteErrors);
 
     // Update the import table with the correct id
-    const importsToUpdate = await getProductionOrderImportsToUpdate(
-      deletedPODetails
-    );
+    const importsToUpdate =
+      await getProductionOrderImportsToUpdate(deletedPODetails);
     const updateErrors = await updateImports(importsToUpdate);
 
     //Return any errors
