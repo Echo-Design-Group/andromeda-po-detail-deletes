@@ -1,20 +1,22 @@
-const { email, emailPass } = require('../config');
-const nodemailer = require('nodemailer');
-const xl = require('excel4node');
-const fs = require('fs');
+const { from_email, from_pass } = require("../../globalConfig");
+const { toEmail } = require("../config");
+// const { email, emailPass } = require("../config");
+const nodemailer = require("nodemailer");
+const xl = require("excel4node");
+const fs = require("fs");
 
 const getXlxs = (arr) => {
   //Create a new Excel sheet
   let wb = new xl.Workbook();
-  let ws = wb.addWorksheet('Errors');
+  let ws = wb.addWorksheet("Errors");
 
   //Add headers
-  ws.cell(1, 1).string('idPO');
-  ws.cell(1, 2).string('idPODetail');
-  ws.cell(1, 3).string('Style');
-  ws.cell(1, 4).string('Color');
-  ws.cell(1, 5).string('Query');
-  ws.cell(1, 6).string('Err');
+  ws.cell(1, 1).string("idPO");
+  ws.cell(1, 2).string("idPODetail");
+  ws.cell(1, 3).string("Style");
+  ws.cell(1, 4).string("Color");
+  ws.cell(1, 5).string("Query");
+  ws.cell(1, 6).string("Err");
 
   //Loop through the error array to add to the worksheet
   for (let i = 0; i < arr.length; ++i) {
@@ -47,38 +49,40 @@ const getXlxs = (arr) => {
   }
 
   //Save the error file to the current directory
-  wb.write('AndromedaErrorReport.xlsx');
+  wb.write("AndromedaErrorReport.xlsx");
 };
 
 const sendErrorReport = async (arr, type) => {
   getXlxs(arr);
 
   let transporter = nodemailer.createTransport({
-    host: 'smtp-mail.outlook.com',
+    host: "smtp-mail.outlook.com",
     secure: false,
     port: 587,
     auth: {
-      user: email,
-      pass: emailPass,
+      user: from_email,
+      pass: from_pass,
     },
   });
 
   await transporter.sendMail({
-    from: '"Lauren West" <lwest@echodesign.com>',
-    to: `${email}`,
-    subject: `${type} Error Report`,
+    from: from_email,
+    to: toEmail,
+    subject: `Andromeda ${type} Error Report`,
     text: `Attached are the errors from the ${type} update.`,
     attachments: [
       {
-        filename: 'AndromedaErrorReport.xlsx',
-        path: './AndromedaErrorReport.xlsx',
+        filename: "AndromedaErrorReport.xlsx",
+        path: "./AndromedaErrorReport.xlsx",
         contentType:
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       },
     ],
   });
 
-  fs.unlinkSync('./AndromedaErrorReport.xlsx');
+  console.log("Sent error report");
+
+  fs.unlinkSync("./AndromedaErrorReport.xlsx");
 };
 
 module.exports = { sendErrorReport };

@@ -128,7 +128,6 @@ const deletePODetails = async (ids) => {
   const deletedPODetails = sqlPODetails.filter(
     ({ idPODetail }) => !ids.includes(parseInt(idPODetail)),
   );
-  console.log(deletedPODetails);
 
   // If there are deleted details...
   if (deletedPODetails.length) {

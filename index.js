@@ -8,7 +8,7 @@ const { sendErrorReport } = require("./functions/errorReporting.js");
 
 const { getCurrentPODetailIds, deletePODetails } = require("./andromeda");
 
-const server = app.listen(6026, async () => {
+const main = async () => {
   console.log("Andromeda PO Detail Deletes is running...");
   const errors = [];
   try {
@@ -27,7 +27,9 @@ const server = app.listen(6026, async () => {
 
     // After detail rows have been deleted, send the production orders to ECHO-INT
     await executeProcedure("ProductionOrderExportToEHOINT");
+    console.log("Program complete");
   } catch (err) {
+    console.log(err);
     errors.push({
       err: err?.message,
     });
@@ -36,28 +38,6 @@ const server = app.listen(6026, async () => {
   if (errors.flat().length) {
     await sendErrorReport(errors.flat(), type);
   }
+};
 
-  process.kill(process.pid, "SIGTERM");
-});
-
-process.on("SIGTERM", () => {
-  server.close(() => {
-    console.log("Process terminated");
-  });
-});
-
-process.on("uncaughtException", async (err) => {
-  console.error("uncaughtException:", err);
-  try {
-    await sendErrorReport([{ err: err.message, stack: err.stack }], type);
-  } catch {}
-  process.exit(1);
-});
-
-process.on("unhandledRejection", async (reason) => {
-  console.error("unhandledRejection:", reason);
-  try {
-    await sendErrorReport([{ err: String(reason) }], type);
-  } catch {}
-  process.exit(1);
-});
+main();
